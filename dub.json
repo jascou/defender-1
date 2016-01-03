@@ -1,0 +1,10 @@
+{
+	"name" : "defender",
+	"description" : "defender",
+	"lflags" : [  "+C:\\D\\DSFML\\lib\\"  ],
+	"targetType" : "executable",
+	"dependencies" : {
+		"dsfml:graphics": "~>2.1",
+		"dsfml:audio": "~>2.1"		
+		}
+}

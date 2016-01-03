@@ -1,0 +1,8 @@
+{
+	"dub": {
+		"cachedUpgrades": {
+			"dsfml": "2.1.0"
+		},
+		"lastUpgrade": "2016-01-02T22:59:28.3980103"
+	}
+}
