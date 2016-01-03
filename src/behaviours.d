@@ -846,7 +846,7 @@ auto  swarmer_ai() {
 
 	auto _ai = delegate void(Entity p) { 
 
-		if(p.status==entity.DIE){
+		if(p.status==entity.DIE || p.status==entity.EXPLODE ){
             return;
 		}
         auto x=p.worldpos.x;
