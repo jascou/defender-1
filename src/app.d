@@ -1,11 +1,14 @@
  
 module app;
 
-import dsfml.graphics;
-import world, entity_mgr, spritemgr, config, globals, soundmgr;
-import game,behaviours;
-import starfield,entity, lasers, gameevent,  hud;
 import std.stdio,std.format,std.algorithm;
+
+import dsfml.graphics;
+
+import world, entity_mgr, spritemgr, config, globals, soundmgr,particle, characters;
+import game,behaviours,logosmash;
+import starfield,entity, lasers, gameevent,  hud;
+
 
 class App{
 	
@@ -31,21 +34,24 @@ class App{
             win = new RenderWindow(VideoMode(700,562),"Hello DSFML!"  );
             
         win.setVerticalSyncEnabled(true);
+        win.setMouseCursorVisible(false);
         win.clear(Color.Black);
         win.display();
-        assert ( win !is null ) ;
-        
+
         config=new Config(this);
         globals=new Globals(this);
+        
+        run_logosmash(win,this);
+        		
         clock=new Clock();
         scenemgr=new SceneManager(this);
         sound_mgr=new SoundMgr(this);
-        sprite_mgr=new SpriteMgr();
+        sprite_mgr=new SpriteMgr(this);
         load_sounds_and_sprites();
         game_engine=new Game(this);
         scenemgr.add_scene(game_engine);
-        backgnd=Color.Black;
-      	win.clear(backgnd);
+
+      	 
     
    };
         
@@ -73,6 +79,7 @@ class App{
             if (! scenemgr.current_scene.running ) { 
 
                 globals.gamelevel+=1;
+                config.bullet_time-=20;
                 game_engine=new Game(this);
                 scenemgr.replace_scene(game_engine);
  
@@ -92,6 +99,7 @@ class App{
         sound_mgr.load("grabbed","grabbed.wav",false);
         sound_mgr.load("humandie","humandie.wav",false);
         sound_mgr.load("landerdie","landerdie.wav",false);
+        sound_mgr.load("bomberdie","bomberdie.wav",false);
         sound_mgr.load("laser","laser.wav",false);
         sound_mgr.load("levelstart","levelstart.wav",false);
         sound_mgr.load("materialise","materialise.wav",false);
@@ -131,6 +139,8 @@ class App{
         sprite_mgr.set_animation("pod", 2, spritemgr.ANIM_LOOP,  0.5 );  
         sprite_mgr.load_image("swarmer", "swarmer.bmp");
         sprite_mgr.set_animation("swarmer", 1, spritemgr.ANIM_NONE,  0 );  
+        sprite_mgr.load_image("bomb", "bomb.bmp");
+        sprite_mgr.set_animation("bomb", 1, spritemgr.ANIM_NONE,  0 );  
     } 
 } 
 
@@ -161,4 +171,73 @@ void trace(T...)(T args)
 	     
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////             
+class SceneManager {
+     
+    App app;
+    Scene[] scenelist;
+    int currscene; 
+    Scene current_scene;
+    
+    this(App app) {
 
+        this.app=app;
+        currscene=0;
+	}
+    
+	void add_scene(Scene scene) { 
+
+        scenelist~=scene;
+        current_scene=scenelist[currscene];
+	}
+	void replace_scene(Scene scene) { 
+
+        current_scene.app=null;
+        scenelist[$-1]=scene;
+        current_scene=scenelist[currscene];
+	}
+	
+	void push_scene(Scene scene) { 
+
+        scenelist~=scene;
+        currscene++;
+        current_scene=scenelist[currscene];
+	}
+	
+	void pop_scene() { 
+		scenelist.length--;
+        currscene--;
+        current_scene=scenelist[currscene];
+	}
+}
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////                     
+class Scene {
+
+	App app;
+	SpriteMgr sprite_mgr;
+	ParticleSystem particle_system;
+	EventHandler event_handler;
+	SoundMgr sound_mgr;
+	Characters characters;
+	Clock clock;
+	bool running;
+	int[string] levinfo;
+	int pause, humans_active;
+	
+	this(App app){
+		
+        this.app=app;
+        sprite_mgr=app.sprite_mgr;
+        particle_system=new ParticleSystem(app);
+        event_handler=new EventHandler();
+        sound_mgr=app.sound_mgr;
+        characters=new Characters(app);      
+        running=true;
+        humans_active=0;
+	}
+	abstract void draw();
+	abstract void update();
+}

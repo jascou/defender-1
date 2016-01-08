@@ -70,7 +70,7 @@ auto  init_world_explosion() {
         p.dx= cos(p.dir) * p.speed;
         p.dy=  sin(p.dir) * p.speed;
         p.life=200;
-        p.rad=3;
+        p.rad=2;
         p.fillcolor=Color(200,150,0);
         p.outcolor=Color(200,150,0);
         p.points=4;
@@ -557,7 +557,7 @@ auto  lander_ai() {
         p.worldpos=v2f(x,y);
         p.framecount+=1;
 
-        if (p.framecount > p.nextfire){
+        if (p.framecount > p.nextfire && p.state != LANDER_WAITING ){
 
             p.fire_bullet=true;
             p.framecount=0;
@@ -627,6 +627,7 @@ auto  human_init() {
         p.enemy=false;
         p.picked=false;
         p.hudcolor=Color.Magenta;
+        p.hudshape.scale=v2f(0.5,1);
         p.dispersion=80;
         p.xpix=2;
         p.ypix=5;
@@ -896,6 +897,7 @@ auto  baiter_init() {
         p.ypix=3;
         p.draw_component=fancy_draw();
         p.hudcolor=Color(0,180,0);
+         p.hudshape.scale=v2f(1,0.5);
         p.explosion_color=Color(0,180,0);
         p.explosion_bits=20;
         p.fire_bullet=false;
@@ -917,13 +919,19 @@ auto  baiter_ai() {
 
 		if(p.status==entity.DIE){
             p.game.event_handler.notify(gameevent.BAITERDIE,p);
-            return;
+        }    
+		// keep respawning 
+        if(p.status==entity.DEAD){
+            p.status=entity.QUIESCENT;
+            p.state=BAITER_SPAWN;
+            p.dispersion=150;
+            p.spawndelay=200;
 		}
 		if (p.status==entity.EXPLODE) {return;}
 
 		if(p.state==BAITER_WAIT){
 
-			if(p.game.number_landers<13){
+			if(p.game.number_landers<3){
                 p.state=BAITER_SPAWN;
             }
             else 
@@ -968,6 +976,113 @@ auto  baiter_ai() {
     return _ai ;
 }
 //#######################################################################################################################
+auto  bomber_init() { 
+
+	auto  _initialise= delegate void(Entity p) { 
+
+        p.worldpos=v2f(-5000F+uniform(-300F,300F),p.app.win.size.y/2+p.id*200);
+
+        p.status=entity.ALIVE;
+        p.draw_component=fancy_draw();
+        p.drawhud=true;
+        p.target=null;
+        p.nextfire=uniform(40,60);
+        p.framecount=0;
+        p.dispersion=0;
+        p.xpix=8;
+        p.ypix=8;
+        p.hudcolor=Color(0,0,200);
+        p.explosion_color=Color(0,0,200);
+        p.explosion_bits=20;
+        p.fire_bullet=false;
+        p.spawndelay=0;
+        p.nextthink=0;
+        p.dx=1;
+        p.dy=random_choice(-1,1);
+        p.enemy=true;
+	};
+
+    return _initialise;
+
+}
+//#######################################################################################################################  
+
+auto  bomber_ai() { 
+
+	auto _ai = delegate void(Entity p) { 
+
+		auto ww=p.app.globals.worldwidth;
+        auto wy=p.app.win.size.y;
+
+		if(p.status==entity.DIE){
+            p.game.event_handler.notify(gameevent.BOMBERDIE,p);
+            return;
+		}
+		if (p.status==entity.EXPLODE) {return;}
+
+		 
+        auto x=p.worldpos.x;
+        auto y=p.worldpos.y;
+
+        if ( y<200 || y>wy ) {
+        	p.dy=-p.dy;
+        } 
+        x+=p.dx;
+        if (x < 0)   x=ww;
+        if (x > ww)   x=0 ;   
+        y+=p.dy ;     
+	 
+        p.worldpos=v2f(x,y);
+        p.framecount+=1;
+
+        if (p.framecount > p.nextfire ){
+
+            p.fire_bullet=true;
+            p.framecount=0;
+		} 
+        if (p.fire_bullet && p.on_screen && p.game.player.status==entity.ALIVE){
+
+            p.game.fire_bomb(p.worldpos) ; 
+            p.fire_bullet=false  ;  
+		} 
+	} ;
+    return _ai ;
+}
+//#######################################################################################################################    
+auto  bomb_init() { 
+
+	auto _initialise = delegate void(Entity p ) {
+
+        p.worldpos=v2f(0,0);
+        p.life=1000;
+        p.status=entity.DEAD;
+        p.dpos=v2f(0,0);
+	} ;
+    return _initialise;
+} 
+//#######################################################################################################################    
+auto  bomb_spawn(v2f pos) { 
+
+	auto  _spawn= delegate void(Entity e) {
+
+        e.worldpos=pos;
+        e.life=200;
+        e.dpos=v2f(0,0);
+	};
+    return _spawn ;
+} 
+//#######################################################################################################################
+auto  bomb_ai() { 
+
+	auto _ai= delegate void(Entity p) {
+        
+        p.life--;
+        if (p.life==0) 
+            p.status=entity.DEAD;
+	};
+    return _ai ;
+} 
+//#######################################################################################################################   
 //#######################################################################################################################
 //# misc utilities 
 //#######################################################################################################################
@@ -1019,31 +1134,47 @@ ubyte clamp(ubyte col) {
     return col;
 }
 //#######################################################################################################################    
-auto  gen_color() { 
-
-    /*pattern=it.cycle([ (1,0,-1 ), (0,1,0), (-1, 0,1), (0,-1, 0 ) ]);
-    dr,dg,db=pattern.next();
-    r=0;
-    g=0;
-    b=255;
-    i=0;
-
-    while true:
-
-        i+=1 ;
-        r+= dr ;
-        g+= dg;
-        b+= db;
-
-		if(i==255){
-            i=0;
-            dr,dg,db=pattern.next();
-
-
-        yield  Color(r,g,b);
-    */
-    return Color.White;
-}
+class ColorCycle  {
+	
+	Color[] colors,seed;
+	int seed_index,col_index;
+	 
+	
+	this(){
+		seed=[ Color.Blue, Color.Magenta, Color.Red, Color.Yellow, Color.Green, Color.Cyan ] ;
+		seed_index=0;
+		col_index=0;
+		
+		while(seed_index < seed.length) {
+			
+			auto col=seed[seed_index];
+			for (int i=0; i<40; i++){
+				colors~=col;	
+			}
+			auto nxt = seed_index==seed.length-1? seed[0]:seed[seed_index+1];	
+			auto dr= (nxt.r-col.r)/40 ;
+			auto dg= (nxt.g-col.g)/40 ;
+			auto db= (nxt.b-col.b)/40 ;
+			int r=col.r;
+			int g=col.g;
+			int b=col.b;
+			
+			for (int i=0; i<40; i++){
+				r+=dr;
+				g+=dg;
+				b+=db;
+				colors~=Color(cast(ubyte)r, cast(ubyte)g, cast(ubyte)b);
+			}
+			seed_index++;
+		}
+				
+	}
+	Color next(){
+		col_index++;
+		if ( col_index==colors.length){  col_index=0; }
+		return colors[col_index];
+	}
+ }
 //#######################################################################################################################      
 auto  randcol2() { 
 

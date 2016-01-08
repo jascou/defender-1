@@ -8,10 +8,10 @@ class MySound {
 	SoundBuffer soundbuf;	
 	Sound sound;
 	
-	this (string filename, int volume) { 
+	this (App app, string filename, int volume) { 
 
         soundbuf=new SoundBuffer();
-        soundbuf.loadFromFile("resources/"~filename);
+        soundbuf.loadFromMemory(app.globals.get_resource(filename)); 
         sound=new Sound();
         sound.setBuffer(soundbuf);
         sound.volume=volume;
@@ -29,13 +29,14 @@ class SoundMgr {
     bool mute;
     
 	this (App app) { 
-         
+        
+        this.app=app;
         mute=app.config.mute;
 	}
 	
 	void load( string name, string filename, bool looping, int volume=100) { 
 
-        auto s=new MySound(filename, volume);
+        auto s=new MySound(app, filename, volume);
         s.setloop(looping);
         sounds[name]=s;
 	}

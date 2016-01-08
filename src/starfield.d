@@ -19,7 +19,7 @@ class Starfield {
 	}
 	void update( ) { 
 
-		if(clock.getElapsedTime().asMilliseconds()>0.2){
+		if(clock.getElapsedTime().asMilliseconds()>200){
             pm.trigger(emitter);
             clock.restart() ;
         }

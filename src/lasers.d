@@ -62,7 +62,22 @@ class LaserMgr {
                 l.shape.fillColor=l.color;
                 l.shape.position=v2f(l.worldpos.x,l.worldpos.y);
                 app.win.draw(l.shape); 
-   
+   				foreach (i; 0..10){
+   					
+   					float px;
+   					if ( l.extent > 0 ){
+   						px=uniform(l.worldpos.x,l.worldpos.x + l.extent );
+   					}
+   					else{
+   						px=uniform(l.worldpos.x+l.extent,l.worldpos.x  );
+   					}
+   					l.shape.position=v2f(px,l.worldpos.y-2);
+   					l.shape.size=v2f(uniform(2,20),1);
+   					app.win.draw(l.shape);
+   					l.shape.position=v2f(px,l.worldpos.y+6);
+   					l.shape.size=v2f(uniform(2,20),1);
+   					app.win.draw(l.shape);
+   				}
             }
 		}
 	}
@@ -115,7 +130,7 @@ class LaserMgr {
 	//---------------------------------------------------------------------------------------------------------------------    
 	void gen_colors(int delta){
 		
-		auto cols=[ Color.Yellow, Color.Cyan, Color.Green, Color.Blue, Color.Magenta ];
+		auto cols=[ Color.Yellow, Color.Cyan, Color.Green, Color.Blue, Color.Magenta , Color.Red ];
 		foreach ( Color c; cols ){
 			foreach ( int i; 0..delta ){
 				colors~=c;
@@ -169,7 +184,7 @@ auto  laser_control() {
 		if ( p.worldpos.x<0 || p.worldpos.x>p.app.win.size.x ){
             p.status=entity.DEAD;
         }
-        p.shape.size=v2f(p.extent,2);
+        p.shape.size=v2f(p.extent,3);
         p.life-=1;
 		if(p.life==0){
             p.status=entity.DEAD;

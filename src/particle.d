@@ -28,11 +28,10 @@ class ParticleSystem {
 	
     // trigger a system with an emitter object, from a particle pool
 	void trigger(Emitter emitter ) { 
-
+		 
         // if we maxed out the particle pool, enlarge it
 		if(poolfree<emitter.number_particles){
 			auto required=emitter.number_particles-poolfree;
-            pool.length+=required;
             poolfree+=required;
             foreach (int i; 0..required){
             	pool~=new Particle();
@@ -42,9 +41,11 @@ class ParticleSystem {
         foreach (int i; 0..pool.length-1) { 
             auto p=pool[i];
             if (!p.active){
+             
 				p.reset(emitter.pos, emitter.init, emitter.behaviours);
+				c-=1;
             }
-            c-=1;
+            
 			
 			if(c==0){
                 break;
@@ -55,7 +56,8 @@ class ParticleSystem {
             
     // update all active particles       
 	bool update(float shift) { 
-
+ 
+		
 		if(!run){
 			return false;
 		}
@@ -63,17 +65,20 @@ class ParticleSystem {
         auto active=0;
         foreach (int i ; 0..pool.length-1) { 
 			if(pool[i].active){
+				
                 pool[i].update(shift);
                 active+=1;
 			}
 		}
         poolfree=pool.length-active;
+ 
         return (active>0);
 	}
 	
     // draw all active particles     
 	void draw( ) { 
-
+		
+ 
 		 if(!run){
              return;
 		 }

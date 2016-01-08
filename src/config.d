@@ -12,13 +12,26 @@ class Config {
     static this () {
     	
     	LEVEL_INFO=
-    	  [ 10 : [ "landers": 1 , "humans" : 0 , "pods" : 1, "swarmers" : 7,  "baiters": 1, "lander_grab" : 2, "lander_abduct" : -1 ] , 
+    	  [   
 
-             0 : [ "landers": 12, "humans" : 10, "pods" : 0, "swarmers" : 0,  "baiters": 2, "lander_grab" : 2, "lander_abduct" : -1 ] ,
+             0 : [ "landers": 12, "humans" : 10, "pods" : 0, "bombers" : 0, "swarmers" : 0,  "baiters": 0, "lander_grab" : 2, "lander_abduct" : -1 ] ,
 
-             1 : [ "landers": 20, "humans" : 15 , "pods" : 2, "swarmers" : 7, "baiters": 2, "lander_grab" : 5, "lander_abduct" : -3 ] ,
+             1 : [ "landers": 20, "humans" : 10 , "pods" : 1, "bombers" : 2, "swarmers" : 7, "baiters": 1, "lander_grab" : 5, "lander_abduct" : -3 ] ,
 
-             2 : [ "landers": 30, "humans" : 20 , "pods" : 3, "swarmers" : 7, "baiters": 3, "lander_grab" : 6, "lander_abduct" : -4 ] 
+             2 : [ "landers": 25, "humans" : 10 , "pods" : 2, "bombers" : 3, "swarmers" : 7, "baiters": 2, "lander_grab" : 6, "lander_abduct" : -4 ] ,
+             
+             3 : [ "landers": 30, "humans" : 10 , "pods" : 3, "bombers" : 4, "swarmers" : 10, "baiters": 3, "lander_grab" : 7, "lander_abduct" : -5 ] ,
+             
+             4 : [ "landers": 35, "humans" : 10 , "pods" : 4, "bombers" : 5, "swarmers" : 15, "baiters": 4, "lander_grab" : 8, "lander_abduct" : -6 ] ,
+             
+             5 : [ "landers": 35, "humans" : 8 , "pods" : 4, "bombers" : 6, "swarmers" : 15, "baiters": 5, "lander_grab" : 8, "lander_abduct" : -7 ] ,
+             
+             6 : [ "landers": 35, "humans" : 7 , "pods" : 4, "bombers" : 7, "swarmers" : 15, "baiters": 6, "lander_grab" : 8, "lander_abduct" : -7 ] ,
+               
+			 7 : [ "landers": 40, "humans" : 6,  "pods" : 4, "bombers" : 8, "swarmers" : 15, "baiters": 7, "lander_grab" : 9, "lander_abduct" : -8 ] ,
+                 
+             8 : [ "landers": 40, "humans" : 5 , "pods" : 4, "bombers" : 9, "swarmers" : 15, "baiters": 8, "lander_grab" : 9, "lander_abduct" : -8 ]
+                   
 
             ];
 	}
@@ -51,7 +64,7 @@ class Config {
         bullet_speed=200;
         nodie=false;
         mdebug=false;
-        mute=false;
+        mute=true;
         bullet_time=120;
 	
 	}

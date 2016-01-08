@@ -5,76 +5,7 @@ import app, world, entity_mgr, spritemgr,config,globals, soundmgr;
 import starfield,entity,  lasers, gameevent,  hud, particle, characters, behaviours;
 import std.random,std.format;
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////             
-class SceneManager {
-     
-    App app;
-    Scene[] scenelist;
-    int currscene; 
-    Scene current_scene;
-    
-    this(App app) {
 
-        this.app=app;
-        currscene=0;
-	}
-    
-	void add_scene(Scene scene) { 
-
-        scenelist~=scene;
-        current_scene=scenelist[currscene];
-	}
-	void replace_scene(Scene scene) { 
-
-        current_scene.app=null;
-        scenelist[$-1]=scene;
-        current_scene=scenelist[currscene];
-	}
-	
-	void push_scene(Scene scene) { 
-
-        scenelist~=scene;
-        currscene++;
-        current_scene=scenelist[currscene];
-	}
-	
-	void pop_scene() { 
-		scenelist.length--;
-        currscene--;
-        current_scene=scenelist[currscene];
-	}
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////                     
-class Scene {
-
-	App app;
-	SpriteMgr sprite_mgr;
-	ParticleSystem particle_system;
-	EventHandler event_handler;
-	SoundMgr sound_mgr;
-	Characters characters;
-	Clock clock;
-	bool running;
-	int[string] levinfo;
-	int pause, humans_active;
-	
-	this(App app){
-		
-        this.app=app;
-        sprite_mgr=app.sprite_mgr;
-        particle_system=new ParticleSystem(app);
-        event_handler=new EventHandler();
-        sound_mgr=app.sound_mgr;
-        characters=new Characters(app.win);      
-        running=true;
-        humans_active=0;
-	}
-	abstract void draw();
-	abstract void update();
-}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////                       
 class Game : Scene 
@@ -88,7 +19,7 @@ class Game : Scene
 	LaserMgr laser_mgr;
 	Hud hud;
 	Starfield starfield;
-	int number_pods,number_swarmers,number_baiters,number_humans ;
+	int number_pods,number_swarmers,number_baiters,number_humans, number_bombers;
     int counter;
     int status;
 	
@@ -110,7 +41,6 @@ class Game : Scene
         auto handler=event_handler  ;
         handler.add(gameevent.DIED, explosion()) ;
         handler.add(gameevent.DIED, update_score())        ;
-        //handler.add(gameevent.FIRED_AT_PLAYER, null);
         handler.add(gameevent.PLAYER_DIED, player_died());
         handler.add(gameevent.PLAYER_DIED, player_explosion());
         handler.add(gameevent.PLAYER_DIED, stopsound("all"));
@@ -137,6 +67,7 @@ class Game : Scene
         handler.add(gameevent.HUMANDROPPED, sound("dropping"));
         handler.add(gameevent.MUTANT, sound("mutant"));
         handler.add(gameevent.BAITERDIE, sound("baiterdie"));
+        handler.add(gameevent.BOMBERDIE, sound("bomberdie"));
 
 	 
         //laser pool
@@ -175,6 +106,10 @@ class Game : Scene
         entity_mgr.create_pool("baiter", number_baiters, baiter_init(), baiter_ai() ) ;
         entity_mgr.run("baiter");
 
+		number_bombers=levinfo["bombers"];
+        entity_mgr.create_pool("bomber", number_bombers, bomber_init(), bomber_ai() ) ;
+        entity_mgr.run("bomber");
+
         //init human pool
 
         number_humans=levinfo["humans"];
@@ -185,6 +120,9 @@ class Game : Scene
 
         entity_mgr.create_pool("bullet", 10 , bullet_init(), bullet_ai() ) ;
         entity_mgr.run("bullet");
+
+		entity_mgr.create_pool("bomb", 20 , bomb_init(), bomb_ai() ) ;
+        entity_mgr.run("bomb");
 
         //score decals
 
@@ -208,6 +146,7 @@ class Game : Scene
 	 	}
 	}
 	void update_level() { 
+		
         player.update();
         auto speed=player.speed;
         laser_mgr.update();
@@ -229,7 +168,6 @@ class Game : Scene
             status=LEVEL_END;
             characters.set_string("levelend", format("ATTACK WAVE %s COMPLETED" ,(app.globals.gamelevel+1)), v2f(450,300), justify.LEFT );
             humans_active=entity_mgr.active_count("human");
-            trace("== ",humans_active);
             clock.restart();
             counter=0;
             particle_system.run=false;
@@ -251,6 +189,8 @@ class Game : Scene
     //-------------------------------------------------------------------------------------------------------------------- 
 	void update_level_end( ) { 
 
+		sleep(milliseconds(100));
+		
 		if(clock.getElapsedTime().asSeconds()>3){
             running=false;
 		}
@@ -379,7 +319,11 @@ class Game : Scene
             entity_mgr.spawn("bullet", bullet_spawn(pos,dir,speed));
 		}		
 	}
-	
+	//--------------------------------------------------------------------------------------------------------------------
+	void fire_bomb( v2f pos ) { 
+
+        entity_mgr.spawn("bomb", bomb_spawn(pos));		
+	}
     //--------------------------------------------------------------------------------------------------------------------
 	auto score(int id) { 
 
@@ -427,7 +371,7 @@ class Game : Scene
         auto s=50;
 
         for (int i=p1; i<p2; i+=s ) { 
-
+			 
             auto e=new Emitter(app, 4, 0,  init_world_explosion(),  move_explosion()  );
             e.pos=app.globals.screen_pos(v2f(i, world.get_height_at_pos(i)));
             particle_system.trigger(e)   ;

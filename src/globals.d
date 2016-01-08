@@ -1,8 +1,9 @@
 module globals;
- 
+
+import std.math,std.algorithm,std.typecons,std.conv,std.zip,std.file;
 import dsfml.graphics;
 import config,app,entity;
-import std.math,std.algorithm,std.typecons,std.conv;
+
 
 alias Vector2f v2f;
  
@@ -16,6 +17,7 @@ class Globals {
 	Input input_handler;
 	Entity player;
 	int score;
+	ubyte[][string] resources;
 	
     // collection of global vars and functions 
 
@@ -30,7 +32,20 @@ class Globals {
         player=null;
          
         score=0;
+        
+        auto zip = new ZipArchive(read("resources/resources.pak"));
+   
+	    foreach (name, am; zip.directory)
+	    {
+	       zip.expand(am);
+	       resources[name]=am.expandedData ;
+   		}
 	}
+    //------------------------------------------------------------------------------------
+    ref ubyte[] get_resource(string name){
+    	assert(name in resources);
+    	return resources[name];
+    }
     //------------------------------------------------------------------------------------
 	string get_score() { 
 

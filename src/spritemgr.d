@@ -40,15 +40,17 @@ class MySprite {
 
 class SpriteMgr {
 
+	App app;
 	MySprite[string] images;
 	
-	this() {}
+	this(App app) {
+		this.app=app;	
+	}
 
 	void load_image( string name, string image_name) { 
 
-        auto imagefile="resources/"~image_name;
         auto image=new Image();
-        image.loadFromFile(imagefile);
+        image.loadFromMemory(app.globals.get_resource(image_name));
         image.createMaskFromColor(Color.Magenta);
         auto tex=new Texture();
         tex.loadFromImage(image);

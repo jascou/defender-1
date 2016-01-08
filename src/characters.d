@@ -4,6 +4,8 @@ import dsfml.graphics;
 import behaviours;
 import std.string;
 
+import app;
+
 enum justify {
 	RIGHT=1,
 	LEFT=0
@@ -11,27 +13,29 @@ enum justify {
 
 class Characters {
  
- 	RenderWindow win;
+ 	 
  	Image fontimg;
  	Texture tex;
  	Color randcol;
  	Sprite[][string] strings;
  	string charlist;
  	int cw,ch;
+ 	ColorCycle cols;
+ 	App app;
  	
- 	
- 	this(RenderWindow win) {
+ 	this( App app) {
  
-        this.win=win;
+ 		this.app=app;
+       
         fontimg=new Image();
-        fontimg.loadFromFile("resources/font.bmp");
+        fontimg.loadFromMemory(app.globals.get_resource("font.bmp"));
         fontimg.createMaskFromColor( Color(255,0,255));
         tex=new Texture();
         tex.loadFromImage( fontimg);
         charlist="0123456789:?ABCDEFGHIJKLMNOPQRSTUVWXYZ";
         cw=30;
         ch=tex.getSize().y;
-        randcol=behaviours.gen_color();
+        cols=new ColorCycle();
 	}
  	
 	void set_string( string name, string _string, v2f pos, justify just ) { 
@@ -47,8 +51,8 @@ class Characters {
 	void draw() { 
         foreach ( k ; strings.keys()){
             foreach ( s ; strings[k]) {
-                s.color=randcol ;
-                win.draw(s);
+                s.color=cols.next() ;
+                app.win.draw(s);
             }
 		}
 	}

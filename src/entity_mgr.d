@@ -182,9 +182,9 @@ class EntityMgr {
 
 		Entity[] list;
 		foreach (pk; entity_dict.keys()) { 
-			auto active_list=get_active_list(pk);
+			get_active_list(pk);
 			foreach (e; active_list){
-				if ( e.on_screen && e.enemy) {
+				if ( e.on_screen && e.enemy && e.name != "bomb" && e.name != "bullet" ) {
 					list~=e;
 				}
 			}

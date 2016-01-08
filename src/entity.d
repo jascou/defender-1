@@ -95,6 +95,7 @@ class Entity {
         hudcolor=Color.White;
         hudshape=new RectangleShape();
         hudshape.size=v2f(10,10);
+        hudshape.origin=v2f(5,5);
 
         init(this );
 
