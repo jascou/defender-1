@@ -255,6 +255,9 @@ auto  player_control() {
        		case entity.RESPAWN:
 
 		        if (p.clock.getElapsedTime().asSeconds() > p.deadtimer){
+		        	if (p.app.globals.lives==0){
+		        		p.game.event_handler.notify(gameevent.GAMEOVER,p);
+		        	}
 		            p.game.event_handler.notify(gameevent.PLAYER_SPAWN,p);
 		            p.status=entity.ALIVE;
 		            if (p.direction == 1)  
@@ -313,6 +316,7 @@ auto  player_control() {
 		
 		            p.game.event_handler.notify(gameevent.SMARTBOMB, p);
 		            p.nextbomb=10;
+					p.app.globals.smartbombs--;
 				} 
 		        //#------------------------------------------------------------------------    
 		        if (p.thrust != p.lastthrust){

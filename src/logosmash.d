@@ -1,11 +1,13 @@
 module logosmash;
 
-import std.stdio,std.random,std.conv;
+import std.stdio,std.random,std.conv, std.concurrency, std.string;
  
 import dsfml.graphics;
 import dsfml.system;
  
 import app;
+
+__gshared float[] data;
 
 void update(RenderWindow win, VertexArray dots, int index, float dotsize, float x, float y )
 {
@@ -95,19 +97,20 @@ int init_smash(VertexArray dots, float dotsize, Image image, RenderWindow window
     
 }
  
-void run_logosmash(RenderWindow window, App app ) {
+void bg_loaddata( Tid ownerTid ){
 	
-	float[] data;
-	auto d=app.globals.get_resource("logosmash");
-	
-	string l="";
-	foreach(char s; d){
-		if (s=='\n'){ data~=to!float(l); l=""; }
-		else 
-			{if (s!='\r')l~=s; }
+	auto d=File("resources/logosmash");
+
+	foreach( s; d.byLine() ){
+		data~=to!float(strip(to!string(s))); 	 
 	}
 	 
-	
+}
+
+void run_logosmash(RenderWindow window, App app ) {
+
+	auto t=spawn(&bg_loaddata,thisTid);
+	sleep(milliseconds(500));
 	Image image;
     image = new Image();
     image.loadFromMemory(app.globals.get_resource("dsfml.bmp"));

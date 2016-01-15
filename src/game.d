@@ -10,7 +10,7 @@ import std.random,std.format;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////                       
 class Game : Scene 
 {
-	enum { LEVEL, LEVEL_END };
+	static enum { LEVEL, LEVEL_END, GAMEOVER };
 	
 	EntityMgr entity_mgr;
 	Entity player; 
@@ -21,7 +21,8 @@ class Game : Scene
 	Starfield starfield;
 	int number_pods,number_swarmers,number_baiters,number_humans, number_bombers;
     int counter;
-    int status;
+    int[string] levinfo;
+	int humans_active;
 	
 	this ( App app) {
 
@@ -31,7 +32,8 @@ class Game : Scene
         levinfo=app.globals.get_curr_level_info();
         pause=0;
         game_initialise();
-    	status=LEVEL;    
+    	status=LEVEL;  
+    	humans_active=0;  
 	}
 
 	void game_initialise() { 
@@ -68,6 +70,7 @@ class Game : Scene
         handler.add(gameevent.MUTANT, sound("mutant"));
         handler.add(gameevent.BAITERDIE, sound("baiterdie"));
         handler.add(gameevent.BOMBERDIE, sound("bomberdie"));
+        handler.add(gameevent.GAMEOVER, game_over());
 
 	 
         //laser pool
@@ -137,6 +140,7 @@ class Game : Scene
     //--------------------------------------------------------------------------------------------------------------------    
 	override void update( ) { 
 
+		 
 	 	switch (status) {
 	 		case LEVEL :  	  update_level();
 	 		              	  break;
@@ -147,6 +151,11 @@ class Game : Scene
 	}
 	void update_level() { 
 		
+		if ( app.globals.input("PAUSE")){
+        	pause=!pause;	
+        }
+		if (pause) return; 
+		
         player.update();
         auto speed=player.speed;
         laser_mgr.update();
@@ -154,11 +163,7 @@ class Game : Scene
         particle_system.update(speed );
         sprite_mgr.update();
         app.globals.update_worldpos(player.worldpos.x-player.screenpos.x );
-        
-		if(pause>0){
-            pause-=1;
-            return;
-		}
+ 
         entity_mgr.update();
 
         //if level beaten, stop everything and switch to alternate update routine that will do the end of level stuff. when this finishes 
@@ -184,7 +189,9 @@ class Game : Scene
             explode_mountains();
 
 		}
-        characters.set_string("score", app.globals.get_score(), v2f(300,30), justify.RIGHT);
+        characters.set_string("score", app.globals.get_score(), v2f(250,100), justify.RIGHT);
+        
+        
 	}
     //-------------------------------------------------------------------------------------------------------------------- 
 	void update_level_end( ) { 
@@ -279,17 +286,33 @@ class Game : Scene
                 e.state=HUMAN_GROUND;
                 e.parent=null;
 			}
+            app.globals.lives--;
+            app.globals.smartbombs=3;
+     
 		};
         return _func;
     }
     //--------------------------------------------------------------------------------------------------------------------
+	auto game_over(){
+		
+		return () {
+			status=GAMEOVER;
+            running=false;
+        };
+	}
+	
+	//--------------------------------------------------------------------------------------------------------------------
+	
 	auto smartbomb( ) { 
 
 		auto _func=delegate void(Entity obj) { 
 
+			if (app.globals.smartbombs == 0 ) return;
+			
             foreach ( e ; entity_mgr.get_all_onscreen_enemies()){
                 e.kill();
 			}
+
 		};	
         return _func;
     }
@@ -312,7 +335,7 @@ class Game : Scene
         auto f=app.globals.get_fire_data(pos, time);
         auto dir=f[0];
         auto speed=f[1];
-		if( speed<50){
+		if( speed<50 && speed > 5 ){
 			if ( random_choice( true,false )){
                 dir+=0.3;
             }

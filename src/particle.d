@@ -18,8 +18,8 @@ class ParticleSystem {
 	this(App app) { 
 		
         this.app=app;
-        pool.length=400;
-        poolfree=400;
+        pool.length=2000;
+        poolfree=2000;
         run=true;
         foreach (int i; 0..pool.length){
         	pool[i]=new Particle();

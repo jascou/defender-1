@@ -1,6 +1,6 @@
 module globals;
 
-import std.math,std.algorithm,std.typecons,std.conv,std.zip,std.file;
+import std.math,std.algorithm,std.typecons,std.conv,std.zip,std.stdio,std.file,std.array;
 import dsfml.graphics;
 import config,app,entity;
 
@@ -10,14 +10,24 @@ alias Vector2f v2f;
 //===============================================================================================
 class Globals {
 
+	static enum {
+		NORMAL,
+		RECORD,
+		PLAYBACK
+	}
+	
 	App app;
 	int gamelevel;
 	int[string][int] level_info;
 	int worldposx, worldwidth;
 	Input input_handler;
 	Entity player;
-	int score;
+	int score,lives,smartbombs;
 	ubyte[][string] resources;
+	int mode;
+	uint frame;
+	File recording;
+	
 	
     // collection of global vars and functions 
 
@@ -25,13 +35,16 @@ class Globals {
          
         this.app=app;
         gamelevel=0;
-        level_info=Config.LEVEL_INFO;
+        level_info=app.config.LEVEL_INFO;
         worldposx=100;
         worldwidth=app.config.worldwidth;
-        input_handler=new Input(app.config.inputmap);
+        input_handler=new Input(this, app.config.inputmap);
         player=null;
-         
+        lives=app.config.lives;
+        smartbombs=app.config.smartbombs;
         score=0;
+        mode=NORMAL;
+        frame=0;
         
         auto zip = new ZipArchive(read("resources/resources.pak"));
    
@@ -40,6 +53,17 @@ class Globals {
 	       zip.expand(am);
 	       resources[name]=am.expandedData ;
    		}
+	    if (mode==RECORD)
+	    {
+	    	recording=File("resources/recording","w");
+	    }
+	    if (mode==PLAYBACK)
+	    {
+	    	recording=File("resources/recording","r");
+	    	input_handler.load_playback(recording);
+	    		
+	    	 
+	    }
 	}
     //------------------------------------------------------------------------------------
     ref ubyte[] get_resource(string name){
@@ -63,6 +87,11 @@ class Globals {
 	void update_worldpos(float x) { 
 
         worldposx=normalise(x);
+        if (mode==RECORD)
+        {
+        	input_handler.record();
+        }
+        frame++;
     }
     //------------------------------------------------------------------------------------
 	auto normalise(float pos) { 
@@ -167,45 +196,86 @@ class Globals {
 
         return sqrt(  pow(( p2.y - p1.y ),2) + pow(( p2.x - p1.x ),2) );
 	}
+    //------------------------------------------------------------------------------------             
+    
+	 
 }            
 //===============================================================================================   
 class Input {
 
 	Key [string] inputmap;
+	bool[string][] playback;
+	Globals globals; 
 	
-	this (Tuple!(Keyboard.Key,bool)[string] _inputmap) { 
-
+	this (Globals g, Tuple!(Keyboard.Key,bool)[string] _inputmap) { 
+		
+		globals=g;
+		
         foreach( string k ; _inputmap.keys()){
             inputmap[k]=new Key(_inputmap[k][0], _inputmap[k][1]);
             
         }
 	}
+	void load_playback(File rec)
+	{
+		uint curframe=uint.max;
+	 
+		foreach(char[]l ; rec.byLine()){
+			auto s=to!string(l);
+			auto a=split(s);
+			auto frm=to!uint(a[0]);
+			auto cmd=a[1];
+			auto flg=(a[2]=="true");
+			 
+			if ( frm != curframe ){
+				curframe=frm;
+				playback.length++;
+			}
+			playback[curframe][cmd]=flg;
+		}
+		 
+	}
+	void record()
+	{
+		foreach(k;inputmap.keys()){ 
+			globals.recording.writefln("%s %s %s ",globals.frame,k, Keyboard.isKeyPressed(inputmap[k].key));
+		}
+	}
 	
 	bool pressed(string command) { 
 
-		 
+		bool ret=false; 
+ 
 		if(command in inputmap){
-			if(inputmap[command].debounced==false){
-	 
-				if( Keyboard.isKeyPressed(inputmap[command].key)){
-                    return true;
-                }
-			}
-            else{
-				if(Keyboard.isKeyPressed(inputmap[command].key)){
-					if(inputmap[command].pressed==false){
-                        inputmap[command].pressed=true;
-                        return true;
-                	}
-				}	
-                else{
-                    inputmap[command].pressed=false;
-				
+		 
+			if( keypressed(command)){
+				if(inputmap[command].debounced==true){ 
+					if (inputmap[command].pressed==false){
+						ret=true;
+					}
 				}
-			}        
+				else{
+					ret=true;
+				}
+				inputmap[command].pressed=true;
+            }
+			else{
+				inputmap[command].pressed=false;
+ 			}
 		}		           
       
-        return false;
+        return ret;
+	}
+	bool keypressed(string command)
+	{
+		if (globals.mode==Globals.PLAYBACK){
+			if (globals.frame < playback.length)
+				return playback[globals.frame][command];
+			return false;
+		}
+		else{
+			return Keyboard.isKeyPressed(inputmap[command].key);
+		}
 	}
 }
 //===============================================================================================   

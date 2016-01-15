@@ -1,7 +1,7 @@
  
 module app;
 
-import std.stdio,std.format,std.algorithm;
+import std.stdio,std.format,std.algorithm,std.random;
 
 import dsfml.graphics;
 
@@ -26,8 +26,11 @@ class App{
  	Game game_engine;
  	Color backgnd;
  	
+ 	
  	this(mode _mode){
  
+ 		rndGen.seed(0);
+ 		
         if (_mode==mode.FULLSCREEN) 
             win = new RenderWindow(VideoMode.getDesktopMode(),"", Window.Style.Fullscreen);
         else  
@@ -40,9 +43,9 @@ class App{
 
         config=new Config(this);
         globals=new Globals(this);
+      
+        //run_logosmash(win,this);
         
-        run_logosmash(win,this);
-        		
         clock=new Clock();
         scenemgr=new SceneManager(this);
         sound_mgr=new SoundMgr(this);
@@ -50,8 +53,7 @@ class App{
         load_sounds_and_sprites();
         game_engine=new Game(this);
         scenemgr.add_scene(game_engine);
-
-      	 
+	 
     
    };
         
@@ -70,7 +72,8 @@ class App{
 		        if (event.type == event.EventType.Closed ) { 
 		            win.close();
 		        } 
-            }        
+            }   
+		 
             win.clear(backgnd);
             scenemgr.current_scene.update();
             scenemgr.current_scene.draw();
@@ -78,6 +81,10 @@ class App{
                 
             if (! scenemgr.current_scene.running ) { 
 
+			 	if (scenemgr.current_scene.status==Game.GAMEOVER)
+			 	{
+			 		break;
+			 	}
                 globals.gamelevel+=1;
                 config.bullet_time-=20;
                 game_engine=new Game(this);
@@ -141,6 +148,10 @@ class App{
         sprite_mgr.set_animation("swarmer", 1, spritemgr.ANIM_NONE,  0 );  
         sprite_mgr.load_image("bomb", "bomb.bmp");
         sprite_mgr.set_animation("bomb", 1, spritemgr.ANIM_NONE,  0 );  
+        sprite_mgr.load_image("smartbomb", "smartbomb.bmp");
+        sprite_mgr.set_animation("smartbomb", 1, spritemgr.ANIM_NONE,  0 );  
+        sprite_mgr.load_image("shiplife", "shiplife.bmp");
+        sprite_mgr.set_animation("shiplife", 1, spritemgr.ANIM_NONE,  0 );  
     } 
 } 
 
@@ -223,9 +234,9 @@ class Scene {
 	SoundMgr sound_mgr;
 	Characters characters;
 	Clock clock;
-	bool running;
-	int[string] levinfo;
-	int pause, humans_active;
+	int status;
+	bool running,pause;
+	
 	
 	this(App app){
 		
@@ -236,8 +247,33 @@ class Scene {
         sound_mgr=app.sound_mgr;
         characters=new Characters(app);      
         running=true;
-        humans_active=0;
+    
 	}
 	abstract void draw();
 	abstract void update();
 }
+
+//=========================================================================================================================
+ 
+
+void main(){
+	//auto app= new App(App.mode.WINDOWED); 
+	
+	auto app= new App(App.mode.FULLSCREEN);
+
+	app.run();
+};
+
+
+/*
+
+TBD :  lives / sbombs display
+	   bomber spawn position
+       bomb laser hit
+	   baiters are too stupid
+	   baiters not respawning after die
+	   json config file
+	   bullet time dropping too fast in levels
+	   
+	   
+*/
