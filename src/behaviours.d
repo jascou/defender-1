@@ -52,10 +52,8 @@ auto  init_explosion(Entity e) {
         p.dx= cos(p.dir) * p.speed;
         p.dy=  sin(p.dir) * p.speed;
         p.life=uniform(50,100);
-        p.rad=5;
+        p.rad=10;
         p.fillcolor=e.explosion_color;
-        p.outcolor=e.explosion_color ;
-        p.points=4;
         p.alpha=255;
 	}; 
     return _initialise;
@@ -69,11 +67,9 @@ auto  init_world_explosion() {
         p.speed= uniform(1,3);
         p.dx= cos(p.dir) * p.speed;
         p.dy=  sin(p.dir) * p.speed;
-        p.life=200;
-        p.rad=2;
+        p.life=400;
+        p.rad=8;
         p.fillcolor=Color(200,150,0);
-        p.outcolor=Color(200,150,0);
-        p.points=4;
         p.alpha=255;
 	};
 	
@@ -89,10 +85,8 @@ auto  init_player_explosion(Entity ent) {
         p.dx= cos(p.dir) * p.speed;
         p.dy=  sin(p.dir) * p.speed;
         p.life=uniform(50,100);
-        p.rad=10;
+        p.rad=20;
         p.fillcolor=ent.explosion_color;
-        p.outcolor=ent.explosion_color ;
-        p.points=4;
         p.alpha=255;
 	};
     return _initialise;
@@ -119,7 +113,6 @@ auto  move_player_explosion() {
            b-=3;
        } 
        p.fillcolor= Color(r,g,b);
-       p.outcolor= Color(r,g,b);
         
 	} ;
 	
@@ -140,10 +133,8 @@ auto  star_init(App app) {
         p.dx=0;
         p.dy=0;
         p.life=uniform(40,60);
-        p.rad=1;
+        p.rad=4;
         p.fillcolor=randcol2();
-        p.outcolor=randcol2();
-        p.points=6;
         p.alpha=255;
         p.xmax=app.win.size.x;
         p.depth=2;
@@ -530,11 +521,12 @@ auto  lander_ai() {
 
 	            // play mutant sfx while on screen             ;
 	            p.soundctr--;
-	            if (p.soundctr==0) 
-	                if (p.on_screen) 
-	                    p.game.event_handler.notify(gameevent.MUTANT,p);
+	            if (p.soundctr<=0) {
+	                if (p.on_screen) {
+	                    p.game.event_handler.notify(gameevent.MUTANT);
+	                }
 	                p.soundctr=40;
-	
+				}
 	            // think every 20 frames   ;
 	            p.nextthink--;
 	            if (p.nextthink==0){
@@ -1146,6 +1138,15 @@ class ColorCycle  {
 	
 	this(){
 		seed=[ Color.Blue, Color.Magenta, Color.Red, Color.Yellow, Color.Green, Color.Cyan ] ;
+		set_seed();
+	}
+	
+	this ( Color[] newseed ){
+		seed=newseed;
+		set_seed();
+	}
+	
+	void set_seed(){
 		seed_index=0;
 		col_index=0;
 		
@@ -1173,9 +1174,9 @@ class ColorCycle  {
 		}
 				
 	}
-	Color next(){
-		col_index++;
-		if ( col_index==colors.length){  col_index=0; }
+	Color next(int delta=1){
+		col_index+=delta;
+		if ( col_index>=colors.length){  col_index=0; }
 		return colors[col_index];
 	}
  }

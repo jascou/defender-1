@@ -1,9 +1,11 @@
 module entity;
- 
-import dsfml.graphics;
+
 import std.random;
+import dsfml.graphics;
 import gameevent;
 import game,app;
+
+//--------------------------------------------------------------------------------------------------------------------    
 
 enum  {
 	DEAD=0,
@@ -14,7 +16,12 @@ enum  {
 	RESPAWN=5,
 	EXPLODE=6 
 }
+
 alias Vector2f v2f;
+
+//--------------------------------------------------------------------------------------------------------------------    
+// entity class.  entity initialisation, ai and optionally drawing are done by component delegates 
+// defined in behaviours.d and assigned in game.initialise()
 
 class Entity {
  
@@ -32,7 +39,7 @@ class Entity {
     RectangleShape shape,hudshape;
     Sprite sprite;
     
- 
+ 	//player specific 
     RectangleShape sprite2;
     float deadtimer;
     v2f dpos;
@@ -50,13 +57,14 @@ class Entity {
     int lastthrust;
     bool reversing,firing,picked;
  
- 	
+ 	//--------------------------------------------------------------------------------------------------------------------    
+
  	this ( int id, 
  		string name, 
  		App app, 
  		Game game,  
  		void delegate (Entity ) init_plugin,  
- 		void delegate (Entity ) behaviour_plugin) 
+ 		void delegate (Entity ) behaviour_plugin ) 
 	{ 
 
         draw_component=null;
@@ -71,7 +79,8 @@ class Entity {
         
         
 	}
-	
+	//--------------------------------------------------------------------------------------------------------------------    
+
 	
 	void reset() { 
 		
@@ -103,11 +112,13 @@ class Entity {
         sprite=game.sprite_mgr.get_sprite_ref(name);
 	}
 	
-	
+	//--------------------------------------------------------------------------------------------------------------------    
+
 	void set_sprite(string name) { 
         sprite=game.sprite_mgr.get_sprite_ref(name);
 	}
-	
+	//--------------------------------------------------------------------------------------------------------------------    
+
 	FloatRect getGlobalBounds(){
 		if (sprite !is null){
 			return sprite.getGlobalBounds();
@@ -116,6 +127,8 @@ class Entity {
 			return shape.getGlobalBounds();
 		}
 	}
+	//--------------------------------------------------------------------------------------------------------------------    
+
 	void update() { 
 
 		if(status!=DEAD && (sprite !is null || shape !is null )){
@@ -161,13 +174,12 @@ class Entity {
 		}
 	}
 
-
-
+    //--------------------------------------------------------------------------------------------------------------------    
 	void set_draw_component(void delegate(Entity) func) { 
 
         draw_component=func;
 	}
-	
+	//--------------------------------------------------------------------------------------------------------------------    
 	void draw() { 
 			
 		 
@@ -189,27 +201,29 @@ class Entity {
 			}
 		}
 	}
-		
+	//--------------------------------------------------------------------------------------------------------------------    
 	void collisioncheck() { 
 
         touching_player=false;
-		if(game.player.status==ALIVE){
-			if(app.globals.intersects(this, game.player)){
-                touching_player=true;
-				if(enemy){
-                    game.player.kill();
-                    kill();
+        if ( dispersion==0 || name=="human" ){
+			if(game.player.status==ALIVE){
+				if(app.globals.intersects(this, game.player)){
+	                touching_player=true;
+					if(enemy){
+	                    game.player.kill();
+	                    kill();
+					}
 				}
 			}
 		}
-		if((enemy && name != "bullet") || name=="human"){
+		if((enemy && name != "bullet" && name != "bomb" ) || name=="human"){
 			if(game.laser_mgr.check_hit(this)){
                 kill()  ;		
 			}
 		}
 	}		
-
-
+    //--------------------------------------------------------------------------------------------------------------------    
+ 
 	void kill() { 
 		if(app.config.nodie && name=="player"){
             return;

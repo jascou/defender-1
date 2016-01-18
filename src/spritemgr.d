@@ -12,8 +12,8 @@ enum {
 	ANIM_ONESHOT=4,
 	ANIM_LOOP=5 
 }
-
-
+//--------------------------------------------------------------------------------------     
+// sprite class holds texture, sprite and animation details 
 
 class MySprite {
 
@@ -37,6 +37,9 @@ class MySprite {
         name="";
 	}
  }
+
+//-----------------------------------------------------------------------------------------------------
+// manage sprites and animation 
 
 class SpriteMgr {
 
@@ -90,6 +93,7 @@ class SpriteMgr {
 	}
 	auto make_sprite(string name) { 
 
+		assert ( name in images, "Could not find "~name);
         auto img=images[name];
         img.sprite=new Sprite();
         img.sprite.setTexture(img.texture);

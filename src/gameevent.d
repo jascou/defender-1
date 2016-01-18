@@ -27,6 +27,8 @@ enum {
 	WORLD_DESTROYED=21,
 	GAMEOVER=22
 }
+//--------------------------------------------------------------------------------------------------------------------    
+// simple event handler 
 
 class EventHandler {
 
@@ -34,6 +36,7 @@ class EventHandler {
 	void delegate ()[][int] events;
 	
 	this() { }
+	//--------------------------------------------------------------------------------------------------------------------    
 
 	void add( int event, void delegate(Entity) callback ) { 
  
@@ -44,6 +47,8 @@ class EventHandler {
             entity_events[event]=[callback];
  		}        
 	}
+	//--------------------------------------------------------------------------------------------------------------------    
+
 	void add( int event, void delegate() callback ) { 
  
 		if( event in events ){
@@ -53,10 +58,11 @@ class EventHandler {
             events[event]=[callback];
  		}        
 	}
-	void notify( int event, Entity obj=null ) { 
+	//--------------------------------------------------------------------------------------------------------------------    
 
-		if (obj !is null)
-		{
+	void notify( int event, Entity obj=null ) { 
+		 
+		if (obj !is null) {
 			if(event in entity_events){
 				foreach (listener ; entity_events[event] ) {
 	                listener(obj);

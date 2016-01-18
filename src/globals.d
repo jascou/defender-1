@@ -4,10 +4,10 @@ import std.math,std.algorithm,std.typecons,std.conv,std.zip,std.stdio,std.file,s
 import dsfml.graphics;
 import config,app,entity;
 
-
 alias Vector2f v2f;
  
 //===============================================================================================
+// global data / functions 
 class Globals {
 
 	static enum {
@@ -34,7 +34,7 @@ class Globals {
 	this(App app) { 
          
         this.app=app;
-        gamelevel=0;
+        gamelevel=-1;
         level_info=app.config.LEVEL_INFO;
         worldposx=100;
         worldwidth=app.config.worldwidth;

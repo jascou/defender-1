@@ -4,7 +4,9 @@ import dsfml.graphics;
 import app;
 
 alias Vector2f v2f;
-
+//-----------------------------------------------------------------------------------------------------------------
+// draws the scanner, lives, and bombs
+ 
 class Hud {
     
 	App app;
@@ -58,6 +60,7 @@ class Hud {
         app.win.draw(line1);
         app.win.draw(box2);
         app.win.draw(box);
+        
         foreach(int i; 0..4){
         	if (i<app.globals.lives){
         		life.position=v2f(230-(i*50),60);

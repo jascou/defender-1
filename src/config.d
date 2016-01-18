@@ -1,5 +1,5 @@
-
 module config;
+
 import std.typecons,std.conv;
 import dsfml.graphics;
 import app,json;

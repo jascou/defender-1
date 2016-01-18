@@ -6,7 +6,9 @@ import app;
 
 alias Vector2f v2f;
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////       
+//=====================================================================================================================================
+// slow particle system !
+
 class ParticleSystem {
 
 	App app;
@@ -14,14 +16,16 @@ class ParticleSystem {
 	Particle [] pool;
 	int poolfree;
 	bool run;
+	VertexArray particles;
 	
 	this(App app) { 
 		
         this.app=app;
-        pool.length=2000;
-        poolfree=2000;
+        pool.length=20 ;
+        poolfree=20;
         run=true;
-        foreach (int i; 0..pool.length){
+        particles=new VertexArray(PrimitiveType.Quads,pool.length*4);
+        foreach ( int i; 0..pool.length){
         	pool[i]=new Particle();
         }
 	}
@@ -35,18 +39,20 @@ class ParticleSystem {
             poolfree+=required;
             foreach (int i; 0..required){
             	pool~=new Particle();
+            	foreach(int j; 0..4){
+            		auto v=Vertex();
+            		v.position=v2f(0,0);
+            		particles.append(v);
+            	}
             } 
 		}
         auto c=emitter.number_particles;
         foreach (int i; 0..pool.length-1) { 
             auto p=pool[i];
             if (!p.active){
-             
 				p.reset(emitter.pos, emitter.init, emitter.behaviours);
 				c-=1;
             }
-            
-			
 			if(c==0){
                 break;
 			}
@@ -54,21 +60,34 @@ class ParticleSystem {
         poolfree-=emitter.number_particles ;
 	}
             
-    // update all active particles       
+    // update all active particles and update the vertex array holding
+    // the quad primitives    
 	bool update(float shift) { 
  
-		
-		if(!run){
-			return false;
-		}
+		if(!run){return false;}
 		
         auto active=0;
         foreach (int i ; 0..pool.length-1) { 
+         
 			if(pool[i].active){
-				
                 pool[i].update(shift);
                 active+=1;
+            }
+			else{
+				pool[i].pos=v2f(-100,-100);
 			}
+            auto v=Vertex();
+            v.color=pool[i].fillcolor;
+            v.position.x=pool[i].pos.x;
+            v.position.y=pool[i].pos.y;
+            particles[i*4]=v;
+            v.position.x+=pool[i].rad;
+            particles[i*4+1]=v;
+            v.position.y+=pool[i].rad;
+            particles[i*4+2]=v;
+            v.position.x-=pool[i].rad;
+            particles[i*4+3]=v;
+  
 		}
         poolfree=pool.length-active;
  
@@ -77,16 +96,9 @@ class ParticleSystem {
 	
     // draw all active particles     
 	void draw( ) { 
-		
- 
-		 if(!run){
-             return;
-		 }
-         foreach (int i ; 0..pool.length-1 ) { 
-			if(pool[i].active==1){
-               app.win.draw(pool[i].get_sprite());
-			}
-		 }
+
+		 if(!run){ return;}
+		 app.win.draw(particles);
      }
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////              
@@ -117,12 +129,12 @@ class Emitter {
 class Particle {
 
 	void delegate (Particle) behaviours;
-	int depth,life, points,alpha,xmax;
+	int depth,life,alpha,xmax;
 	v2f pos;
 	float dir,speed,dx,dy,rad;
-	Color fillcolor,outcolor;
+	Color fillcolor;
 	bool active;
-	CircleShape circ;
+ 
 	
 	this (  ) { 
         
@@ -134,18 +146,9 @@ class Particle {
         life=0;
         rad=0;
         fillcolor=Color.Red;
-        outcolor=Color.White;
-        points=20;
         alpha=255;
         active = false;
-
-        circ = new CircleShape();
-        circ.fillColor = fillcolor;
-        circ.outlineColor = outcolor;
-        circ.outlineThickness = 1;
-        circ.radius = rad;
-        circ.position = pos;
-        circ.pointCount=points;
+ 
 	}
 //--------------------------------------------------------------------------------------   
 	void reset( v2f pos, void delegate (Particle) init, void delegate (Particle) behaviours) { 
@@ -155,28 +158,18 @@ class Particle {
         init(this);
         this.behaviours=behaviours;
         active=true;
-        circ.pointCount=points;
-        circ.fillColor = fillcolor;
-        circ.outlineColor = outcolor;
 	}
-//--------------------------------------------------------------------------------------     
-	CircleShape get_sprite( ) { 
-
-         return circ;
-	}
+ 
 //--------------------------------------------------------------------------------------           
 	void update(float shift) { 
 
         behaviours(this);
         pos.x-=shift/depth;
-        circ.fillColor=fillcolor;
-        circ.outlineColor=outcolor;
         life-=1;
 		if(life<0){
             active=false;
+            pos=v2f(-100,-100);
 		}
-        circ.position=pos     ;
-        circ.radius=rad;
 	}
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////      

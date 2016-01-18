@@ -1,13 +1,12 @@
 module game;
- 
+
+import std.random,std.format;
 import dsfml.graphics;
 import app, world, entity_mgr, spritemgr,config,globals, soundmgr;
 import starfield,entity,  lasers, gameevent,  hud, particle, characters, behaviours;
-import std.random,std.format;
-
-
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////                       
+ 
+//--------------------------------------------------------------------------------------------------------------------    
+            
 class Game : Scene 
 {
 	static enum { LEVEL, LEVEL_END, GAMEOVER };
@@ -24,6 +23,8 @@ class Game : Scene
     int[string] levinfo;
 	int humans_active;
 	
+	//--------------------------------------------------------------------------------------------------------------------    
+
 	this ( App app) {
 
         super(app);
@@ -35,45 +36,46 @@ class Game : Scene
     	status=LEVEL;  
     	humans_active=0;  
 	}
+	//--------------------------------------------------------------------------------------------------------------------    
 
 	void game_initialise() { 
 		
 		entity_mgr=new EntityMgr(app,this);	
-        //set event listeners
+        //set event listeners. The first argument is the event type, the second is a function returning a delegate.
         auto handler=event_handler  ;
-        handler.add(gameevent.DIED, explosion()) ;
-        handler.add(gameevent.DIED, update_score())        ;
-        handler.add(gameevent.PLAYER_DIED, player_died());
-        handler.add(gameevent.PLAYER_DIED, player_explosion());
-        handler.add(gameevent.PLAYER_DIED, stopsound("all"));
-        handler.add(gameevent.PLAYER_DIED, sound("die"));
-        handler.add(gameevent.PLAYER_SPAWN,sound("background"));
-        handler.add(gameevent.SMARTBOMB, smartbomb());
+        handler.add(gameevent.DIED, 				explosion()) ;
+        handler.add(gameevent.DIED, 				update_score())        ;
+        handler.add(gameevent.PLAYER_DIED, 			player_died());
+        handler.add(gameevent.PLAYER_DIED, 			player_explosion());
+        handler.add(gameevent.PLAYER_DIED, 			stopsound("all"));
+        handler.add(gameevent.PLAYER_DIED, 			sound("die"));
+        handler.add(gameevent.PLAYER_SPAWN,			sound("background"));
+        handler.add(gameevent.SMARTBOMB, 			smartbomb());
         handler.add(gameevent.PLAYER_CAUGHT_HUMAN,  score(250));
-        handler.add(gameevent.HUMAN_LANDED_SAFE,  score(500));
-        handler.add(gameevent.POD_DIED,  spawn_swarmers());
-        handler.add(gameevent.GAME_START, sound("background"));
-        handler.add(gameevent.GAME_START, sound("levelstart"));
-        handler.add(gameevent.THRUST, sound("thruster"));
-        handler.add(gameevent.NOTHRUST,  stopsound("thruster"));
-        handler.add(gameevent.FIRE, sound("laser"));
-        handler.add(gameevent.ABDUCT, sound("grabbed"));
-        handler.add(gameevent.HUMANDIE, sound("humandie"));
-        handler.add(gameevent.PLAYER_CAUGHT_HUMAN, sound("caughthuman"));
-        handler.add(gameevent.HUMAN_LANDED_SAFE, sound("placehuman"));
-        handler.add(gameevent.HUMAN_LANDED_SAFE,  update_score(250));
-        handler.add(gameevent.MATERIALISE, sound("materialise"));
-        handler.add(gameevent.FIRED_AT_PLAYER, sound("bullet"));
-        handler.add(gameevent.LANDERDIE, sound("landerdie"));
-        handler.add(gameevent.LANDERDIE, stopsound("laser"));
-        handler.add(gameevent.HUMANDROPPED, sound("dropping"));
-        handler.add(gameevent.MUTANT, sound("mutant"));
-        handler.add(gameevent.BAITERDIE, sound("baiterdie"));
-        handler.add(gameevent.BOMBERDIE, sound("bomberdie"));
-        handler.add(gameevent.GAMEOVER, game_over());
+        handler.add(gameevent.HUMAN_LANDED_SAFE,  	score(500));
+        handler.add(gameevent.POD_DIED,  			spawn_swarmers());
+        handler.add(gameevent.GAME_START, 			sound("background"));
+        handler.add(gameevent.GAME_START, 			sound("levelstart"));
+        handler.add(gameevent.THRUST, 				sound("thruster"));
+        handler.add(gameevent.NOTHRUST,  			stopsound("thruster"));
+        handler.add(gameevent.FIRE, 				sound("laser"));
+        handler.add(gameevent.ABDUCT, 				sound("grabbed"));
+        handler.add(gameevent.HUMANDIE, 			sound("humandie"));
+        handler.add(gameevent.PLAYER_CAUGHT_HUMAN, 	sound("caughthuman"));
+        handler.add(gameevent.HUMAN_LANDED_SAFE, 	sound("placehuman"));
+        handler.add(gameevent.HUMAN_LANDED_SAFE,  	update_score(250));
+        handler.add(gameevent.MATERIALISE, 			sound("materialise"));
+        handler.add(gameevent.FIRED_AT_PLAYER, 		sound("bullet"));
+        handler.add(gameevent.LANDERDIE, 			sound("landerdie"));
+        handler.add(gameevent.LANDERDIE, 			stopsound("laser"));
+        handler.add(gameevent.HUMANDROPPED, 		sound("dropping"));
+        handler.add(gameevent.MUTANT, 				sound("mutant"));
+        handler.add(gameevent.BAITERDIE, 			sound("baiterdie"));
+        handler.add(gameevent.BOMBERDIE, 			sound("bomberdie"));
+        handler.add(gameevent.GAMEOVER, 			game_over());
 
 	 
-        //laser pool
+        //init laser pool
 
         laser_mgr=new LaserMgr(app,this);
 
@@ -95,7 +97,6 @@ class Game : Scene
         number_landers=levinfo["landers"];
         entity_mgr.create_pool("lander", number_landers, lander_init(), lander_ai() ) ;
         entity_mgr.run_delayed("lander", 180 );
-        //entity_mgr.create_pool("debug", 1, debug_init( ), null_ai( ) ) 
 
         number_pods=levinfo["pods"];
         entity_mgr.create_pool("pod", number_pods, pod_init(), pod_ai() ) ;
@@ -119,7 +120,7 @@ class Game : Scene
         entity_mgr.create_pool("human", number_humans, human_init( ), human_ai( ) ) ;
         entity_mgr.run("human");
 
-        //init bullet pool
+        //init bullet/bomb pools
 
         entity_mgr.create_pool("bullet", 10 , bullet_init(), bullet_ai() ) ;
         entity_mgr.run("bullet");
@@ -138,17 +139,15 @@ class Game : Scene
 	}
 
     //--------------------------------------------------------------------------------------------------------------------    
-	override void update( ) { 
+	override void update(Event e ) { 
 
-		 
 	 	switch (status) {
-	 		case LEVEL :  	  update_level();
-	 		              	  break;
-	 		case LEVEL_END :  update_level_end();
-	 						  break;
-			default : break;
+	 		case LEVEL      : update_level();     break;
+	 		case LEVEL_END  : update_level_end(); break;
+			default         :                     break;
 	 	}
 	}
+	//--------------------------------------------------------------------------------------------------------------------    
 	void update_level() { 
 		
 		if ( app.globals.input("PAUSE")){
@@ -160,7 +159,7 @@ class Game : Scene
         auto speed=player.speed;
         laser_mgr.update();
         starfield.update();
-        particle_system.update(speed );
+        particle_system.update(speed/2 );
         sprite_mgr.update();
         app.globals.update_worldpos(player.worldpos.x-player.screenpos.x );
  
@@ -187,11 +186,9 @@ class Game : Scene
 		if (entity_mgr.active_count("human")==0 && world.active){
 
             explode_mountains();
-
 		}
+		
         characters.set_string("score", app.globals.get_score(), v2f(250,100), justify.RIGHT);
-        
-        
 	}
     //-------------------------------------------------------------------------------------------------------------------- 
 	void update_level_end( ) { 
@@ -212,10 +209,8 @@ class Game : Scene
 		}
 	}	
     //-------------------------------------------------------------------------------------------------------------------- 
-
 	override void draw( ) { 
-
-        //debug.display(app.globals.worldposx)
+ 
         particle_system.draw();
         world.draw();
         player.draw();
@@ -359,7 +354,7 @@ class Game : Scene
     //--------------------------------------------------------------------------------------------------------------------
 	auto  sound(string name) { 
 
-		auto _func=delegate void(Entity obj) { 
+		auto _func=delegate void( ) { 
 
             sound_mgr.play(name);
 		};
@@ -368,7 +363,7 @@ class Game : Scene
 //--------------------------------------------------------------------------------------------------------------------
 	auto  stopsound(string name) {  
 
-		auto _func=delegate void(Entity obj) { 
+		auto _func=delegate void( ) { 
 
 			if(name=="all"){
                 sound_mgr.stopall();
@@ -380,7 +375,6 @@ class Game : Scene
         return _func;
     }
  //--------------------------------------------------------------------------------------------------------------------   
-
 	void explode_mountains( ) { 
 
         world.active=false   ;
@@ -391,7 +385,7 @@ class Game : Scene
 
         auto p1=0;
         auto p2=app.globals.worldwidth ;
-        auto s=50;
+        auto s=10;
 
         for (int i=p1; i<p2; i+=s ) { 
 			 
@@ -408,12 +402,4 @@ class Game : Scene
 }
  
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-T random_choice(T )(T t1,T t2 ){
 	
-	return (uniform(0,2)==1)?t1:t2;	
-}	
-
-T random_choice(T )(T[] t1){
-	
-	return t1[uniform(0,t1.length)];	
-}	

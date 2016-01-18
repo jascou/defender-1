@@ -3,6 +3,8 @@ module soundmgr;
 import dsfml.audio;
 import app;
 
+//--------------------------------------------------------------------------------------     
+
 class MySound {
 
 	SoundBuffer soundbuf;	
@@ -27,20 +29,20 @@ class SoundMgr {
     App app;
     MySound[string] sounds;
     bool mute;
-    
+    //----------------------------------------------------------------------------------------
 	this (App app) { 
         
         this.app=app;
         mute=app.config.mute;
 	}
-	
+	//----------------------------------------------------------------------------------------
 	void load( string name, string filename, bool looping, int volume=100) { 
 
         auto s=new MySound(app, filename, volume);
         s.setloop(looping);
         sounds[name]=s;
 	}
-	
+	//----------------------------------------------------------------------------------------
 	Sound get(string name) { 
 
 		if(name in sounds){
@@ -48,10 +50,11 @@ class SoundMgr {
 		}
         return null;
 	}
+    //----------------------------------------------------------------------------------------
 	void play(string name) { 
 
 		if(mute){return; }
-		
+ 
 		if(name in sounds){
 			if(sounds[name].sound.status()==SoundSource.Status.Playing){
 	                sounds[name].sound.stop();
@@ -59,13 +62,14 @@ class SoundMgr {
 	        sounds[name].sound.play();
 		}
 	}
+	//----------------------------------------------------------------------------------------
 	void stop(string name) { 
 
 		if(name in sounds){
             sounds[name].sound.stop();
 		}
 	}
-	
+    //----------------------------------------------------------------------------------------
 	void stopall() { 
 
         foreach ( name ; sounds.keys()){

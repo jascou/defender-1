@@ -112,7 +112,7 @@ class LaserMgr {
                     laserlist[i]=b;
                     return true;
 				}
-                auto ent_b=ent.sprite.getLocalBounds();
+                /*auto ent_b=ent.sprite.getLocalBounds();
 
                 auto x1=b.screenpos.x ;
                 auto x2=b.screenpos.x + b.extent ;
@@ -122,7 +122,7 @@ class LaserMgr {
                     b.status=entity.DEAD ;
                     laserlist[i]=b;
                     return true;
-				}
+				}*/
             }
 		}
         return false;   

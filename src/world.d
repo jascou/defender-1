@@ -6,6 +6,9 @@ import app;
 
 alias Vector2f v2f; 
 
+//--------------------------------------------------------------------------------------     
+// draws mountains at current player pos
+
 class World {
     
     App app;
@@ -24,21 +27,19 @@ class World {
         dp=1;
 
         foreach ( i ; 0..ww ) {
-
             bloblist~=pos;
             pos+=dp;
 			if((pos>=maxh || pos<=0)){
                 dp=-dp;
  			}
 			else { 
-				if (uniform(0,200)==1){
+				if (uniform(0,100)==1){
                 	dp=-dp;
 				}
 			}
 		}
         pos=0;
         foreach (i ; ww-1..0 ) {
-
 			if(pos>=bloblist[i]){
                 break;
 			}
@@ -60,26 +61,23 @@ class World {
 	}
 	void draw() { 
 
-		if(!active){
-
-            return;
-		}
+		if(!active){ return; }
+		
         auto p=cast(int)(app.globals.worldposx);
- 
         auto w=app.win.size.x;
         auto h=app.win.size.y;
-
         auto x=0;
         auto f=1;
+        
         foreach ( int i ; p..p+w ) { 
             x+=1;
             auto ii=i ;
 			if(i>=ww-1){
                 ii=(i-ww)+1;
 			}
-			 
 			assert(ii >= 0 );
 			assert(ii < ww );
+			
 			if(f==1){
                 blob.position=v2f(x,h-bloblist[ii]);
                 app.win.draw(blob);
@@ -87,8 +85,6 @@ class World {
             f=-f;
 		}
 	}
- 
-
 
 	int get_height_at_pos( float x) { 
 

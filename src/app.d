@@ -1,21 +1,45 @@
- 
 module app;
 
 import std.stdio,std.format,std.algorithm,std.random;
-
 import dsfml.graphics;
+import world, entity_mgr, spritemgr, config;
+import globals, soundmgr, particle, characters;
+import game, attract, behaviours, logosmash;
+import starfield, entity, lasers, gameevent, hud;
 
-import world, entity_mgr, spritemgr, config, globals, soundmgr,particle, characters;
-import game,behaviours,logosmash;
-import starfield,entity, lasers, gameevent,  hud;
+//=========================================================================================================================
+//=========================================================================================================================
+//=========================================================================================================================
+ 
+void main(){
+	
+	//auto app= new App(App.mode.WINDOWED); 
+	auto app= new App(App.mode.FULLSCREEN);
 
+	app.run();
+} 
 
-class App{
+/*
+TBD :   
+	   bomber spawn position
+       bomb laser hit
+	   baiters are too stupid
+	   baiters not respawning after die
+	   bullet time dropping too fast in levels
+	   fix mountain explode 
+*/
+
+//=========================================================================================================================
+//=========================================================================================================================
+ //=========================================================================================================================
+ 
+  
+class App {
 	
 	static enum mode {
 		WINDOWED=0,  
 		FULLSCREEN=1   
-	}    ;
+	};
  	RenderWindow win;
  	Config config;
  	Globals globals;
@@ -43,26 +67,24 @@ class App{
 
         config=new Config(this);
         globals=new Globals(this);
-      
-        //run_logosmash(win,this);
-        
-        clock=new Clock();
+		clock=new Clock();
         scenemgr=new SceneManager(this);
         sound_mgr=new SoundMgr(this);
         sprite_mgr=new SpriteMgr(this);
+        backgnd=Color.Black;
+        run_logosmash(win,this);
+        
         load_sounds_and_sprites();
-        game_engine=new Game(this);
-        scenemgr.add_scene(game_engine);
-	 
-    
+        
+        scenemgr.add_scene(new Attract(this));
+
    };
         
    void run() {
-   	        
-   	     
-        while (win.isOpen())  
-		{
-			Event event;
+   	         
+        while (win.isOpen())  {
+        	
+			Event event,e;
 		
 		    while(win.pollEvent(event)){
                 
@@ -71,30 +93,32 @@ class App{
 		        } 
 		        if (event.type == event.EventType.Closed ) { 
 		            win.close();
-		        } 
+		        }
+		        e=event; 
             }   
-		 
+		  
             win.clear(backgnd);
-            scenemgr.current_scene.update();
+            scenemgr.current_scene.update(e);
             scenemgr.current_scene.draw();
             win.display();
                 
             if (! scenemgr.current_scene.running ) { 
 
-			 	if (scenemgr.current_scene.status==Game.GAMEOVER)
-			 	{
-			 		break;
+			 	if (scenemgr.current_scene.status==Game.GAMEOVER) {
+			 		config=new Config(this);
+        			globals=new Globals(this);			 	 
+			 		scenemgr.replace_scene(new Attract(this));
 			 	}
-                globals.gamelevel+=1;
-                config.bullet_time-=20;
-                game_engine=new Game(this);
-                scenemgr.replace_scene(game_engine);
- 
+			 	else{
+                	globals.gamelevel+=1;
+                	config.bullet_time-=20;
+                	game_engine=new Game(this);
+                	scenemgr.replace_scene(game_engine);
+                }
 			} 
 	    } 
 	} 
  	        
-			        
     void load_sounds_and_sprites(){
     
         sound_mgr.load("background","background.wav",true,20);
@@ -117,7 +141,6 @@ class App{
         sound_mgr.load("baiterdie","baiterdie.wav",false);
         sound_mgr.load("world_destroyed","laser.wav",false);
         sound_mgr.get("world_destroyed").pitch=0.5;
-        
         
         sprite_mgr.load_image("lander", "lander.bmp");
         sprite_mgr.set_animation("lander", 3, spritemgr.ANIM_LOOP,  0.5 );
@@ -151,39 +174,20 @@ class App{
         sprite_mgr.load_image("smartbomb", "smartbomb.bmp");
         sprite_mgr.set_animation("smartbomb", 1, spritemgr.ANIM_NONE,  0 );  
         sprite_mgr.load_image("shiplife", "shiplife.bmp");
-        sprite_mgr.set_animation("shiplife", 1, spritemgr.ANIM_NONE,  0 );  
+        sprite_mgr.set_animation("shiplife", 1, spritemgr.ANIM_NONE,  0 );
+        sprite_mgr.load_image("title", "title.bmp");
+        sprite_mgr.set_animation("title", 1, spritemgr.ANIM_NONE,  0 );  
+        sprite_mgr.load_image("title2", "title2.bmp");
+        sprite_mgr.set_animation("title2", 1, spritemgr.ANIM_NONE,  0 );  
+        sprite_mgr.load_image("title3", "title3.bmp");
+        sprite_mgr.set_animation("title3", 1, spritemgr.ANIM_NONE,  0 );    
+        sprite_mgr.load_image("title4", "title4.bmp");
+        sprite_mgr.set_animation("title4", 1, spritemgr.ANIM_NONE,  0 );    
     } 
 } 
 
-void trace(T...)(T args)
-{
- 
-	    static if (!T.length)
-	    {
-	        writeln();
-	        stdout.flush();
-	    }
-	    else
-	    {
-	        static if (is(T[0] : string))
-	        {
-	            if (canFind(args[0], "%"))
-	            {
-	                writefln(args);
-	                stdout.flush();
-	                return;
-	            }
-	        }
-	
-	        // not a string, or not a formatted string
-	        writeln(args);
-	        stdout.flush();
-	    }
-	     
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////             
-class SceneManager {
+//=========================================================================================================================
+ class SceneManager {
      
     App app;
     Scene[] scenelist;
@@ -222,10 +226,8 @@ class SceneManager {
 	}
 }
 
-
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////                     
-class Scene {
+//=========================================================================================================================
+ class Scene {
 
 	App app;
 	SpriteMgr sprite_mgr;
@@ -250,30 +252,45 @@ class Scene {
     
 	}
 	abstract void draw();
-	abstract void update();
+	abstract void update(Event event);
 }
 
 //=========================================================================================================================
+// util functions
+//=========================================================================================================================
+ void trace(T...)(T args) {
  
-
-void main(){
-	//auto app= new App(App.mode.WINDOWED); 
+	    static if (!T.length)
+	    {
+	        writeln();
+	        stdout.flush();
+	    }
+	    else
+	    {
+	        static if (is(T[0] : string))
+	        {
+	            if (canFind(args[0], "%"))
+	            {
+	                writefln(args);
+	                stdout.flush();
+	                return;
+	            }
+	        }
 	
-	auto app= new App(App.mode.FULLSCREEN);
-
-	app.run();
-};
-
-
-/*
-
-TBD :  lives / sbombs display
-	   bomber spawn position
-       bomb laser hit
-	   baiters are too stupid
-	   baiters not respawning after die
-	   json config file
-	   bullet time dropping too fast in levels
-	   
-	   
-*/
+	        // not a string, or not a formatted string
+	        writeln(args);
+	        stdout.flush();
+	    }
+	     
+}
+ //=========================================================================================================================
+T random_choice(T )(T t1,T t2 ){
+	
+	return (uniform(0,2)==1)?t1:t2;	
+}	
+//=========================================================================================================================
+T random_choice(T )(T[] t1){
+	
+	return t1[uniform(0,t1.length)];	
+}
+//=========================================================================================================================

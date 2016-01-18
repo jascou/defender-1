@@ -1,10 +1,8 @@
 module logosmash;
 
 import std.stdio,std.random,std.conv, std.concurrency, std.string;
- 
 import dsfml.graphics;
 import dsfml.system;
- 
 import app;
 
 __gshared float[] data;
@@ -103,16 +101,16 @@ void bg_loaddata( Tid ownerTid ){
 
 	foreach( s; d.byLine() ){
 		data~=to!float(strip(to!string(s))); 	 
-	}
-	 
+	} 
 }
 
 void run_logosmash(RenderWindow window, App app ) {
 
+	// each dot's position will be controlled by the data in resources/logosmash
+	// load this up in the background so we don't have to wait for it 
 	auto t=spawn(&bg_loaddata,thisTid);
 	sleep(milliseconds(500));
-	Image image;
-    image = new Image();
+    auto image = new Image();
     image.loadFromMemory(app.globals.get_resource("dsfml.bmp"));
     auto image_width=image.getSize().x;
     auto image_height=image.getSize().y;
@@ -139,6 +137,7 @@ void run_logosmash(RenderWindow window, App app ) {
 	    }
  
 	    window.clear(Color.Black);
+	    
         for ( int count=0; count <= bits; count++){
         	update(window, dots,count, dotsize, data[data_index],data[data_index+1]);
         	data_index+=2;

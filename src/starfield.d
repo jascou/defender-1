@@ -3,6 +3,8 @@ module starfield;
 import particle,behaviours,app;
 import dsfml.graphics;
 
+//--------------------------------------------------------------------------------------     
+// draw stars 
 class Starfield {
 
 	App app;

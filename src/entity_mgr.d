@@ -3,7 +3,9 @@ module entity_mgr;
 import entity,app,game;
 import dsfml.graphics;
 
-//######################################################################################
+//=========================================================================================================================
+// holds an array of entities of a particular type 
+
 class EntityPool {
 
 	Entity[] pool_list;
@@ -20,7 +22,9 @@ class EntityPool {
         delay=0;
     }
 }
-//######################################################################################
+//=========================================================================================================================
+// manages the various entity pools 
+
 class EntityMgr {
  
 
@@ -171,7 +175,6 @@ class EntityMgr {
             		active_list~=e;
             	}
             }
-            
 		}
         return active_list;
 	}
