@@ -79,7 +79,7 @@ auto init_world_explosion()
 
     return _initialise;
 }
- 
+
 //#######################################################################################################################
 auto init_player_explosion(Entity ent)
 {
