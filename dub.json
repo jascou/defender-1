@@ -1,10 +1,14 @@
 {
 	"name" : "defender",
 	"description" : "defender",
-	"lflags" : [  "+C:\\D\\DSFML\\lib\\"  ],
-	"targetType" : "executable",
+	"lflags" : [  "+C:\\D\\DSFML\\lib\\", "+C:\\D\\dchip\bin" ],
+	"dflags" : [  "-J ." ],
+	"libs" : [ "dchip" ] ,
+	"importPaths" : [ "C:\\D\\dchip\\src" ],
 	"dependencies" : {
 		"dsfml:graphics": "~>2.1",
-		"dsfml:audio": "~>2.1"		
+		"dsfml:audio": "~>2.1",
+		"dchip": "~>0.1.2"
+		
 		}
 }

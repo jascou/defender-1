@@ -5,7 +5,8 @@ import dsfml.graphics;
 import dsfml.system;
 import app;
 
-__gshared float[] data;
+ubyte[] bytes=cast(ubyte[])import("logosmash");
+float[] data;
 
 void update(RenderWindow win, VertexArray dots, int index, float dotsize, float x, float y)
 {
@@ -80,12 +81,12 @@ int init_smash(VertexArray dots, float dotsize, Image image, RenderWindow window
 void loaddata()
 {
 
-    auto d = File("resources/logosmash");
-
-    foreach (s; d.byLine())
-    {
-        data ~= to!float(strip(to!string(s)));
-    }
+	string l="";
+	foreach(char s; bytes){
+		if (s=='\n'){ data~=to!float(l); l=""; }
+		else 
+			{if (s!='\r')l~=s; }
+	}
 }
 
 void run_logosmash(RenderWindow window, App app)

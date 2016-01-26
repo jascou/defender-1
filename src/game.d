@@ -432,24 +432,31 @@ class Game : Scene
         hud.mountains_active = false;
 
         sound_mgr.play("world_destroyed");
-        auto p = player.worldpos.x;
 
         auto p1 = 0;
         auto p2 = app.globals.worldwidth;
         auto s = 10;
 
-        for (int i = p1; i < p2; i += s)
+        for (int i = p1 ; i < p2; i += s)
         {
-
             auto e = new Emitter(app, 4, 0, init_world_explosion(), move_explosion());
-            e.pos = app.globals.screen_pos(v2f(i, world.get_height_at_pos(i)));
+            e.pos = v2f(i-app.globals.worldwidth/2, world.get_height_at_pos(i));
             particle_system.trigger(e);
         }
+        number_landers=0;
         foreach (e; entity_mgr.get_active_list("lander"))
         {
-            e.state = LANDER_MUTATE;
-            e.status = entity.ALIVE;
-            e.dispersion = 0;
+        	if (e.state==LANDER_SEARCHING||e.state==LANDER_DROPPING||e.state==LANDER_GRABBING||e.state==LANDER_ABDUCTING)
+        	{
+            	e.state = LANDER_MUTATE;
+            	e.status = entity.ALIVE;
+            	e.dispersion = 0;
+            	number_landers++;
+            }
+        	else
+        	{
+        		e.status = entity.DEAD;
+        	}
         }
     }
 }
