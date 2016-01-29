@@ -49,7 +49,7 @@ class Globals
         mode = NORMAL;
         frame = 0;
 
-        auto zip = new ZipArchive(read("resources/resources.pak"));
+        auto zip = new ZipArchive(read("resources/defender.res"));
 
         foreach (name, am; zip.directory)
         {

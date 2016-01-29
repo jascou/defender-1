@@ -5,7 +5,7 @@ import dsfml.graphics;
 import dsfml.system;
 import app;
 
-ubyte[] bytes = cast(ubyte[]) import("logosmash");
+
 float[] data;
 
 void update(RenderWindow win, VertexArray dots, int index, float dotsize, float x, float y)
@@ -78,8 +78,9 @@ int init_smash(VertexArray dots, float dotsize, Image image, RenderWindow window
 
 }
 
-void loaddata()
+void loaddata(App app)
 {
+	auto bytes = app.globals.get_resource("logosmash");
 	int i=0,p=0;
 
 	data.length=4400000;
@@ -131,7 +132,7 @@ void run_logosmash(RenderWindow window, App app)
      
     window.display();
     
-    loaddata();
+    loaddata(app);
     
     win: while (window.isOpen())
     {
