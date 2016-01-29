@@ -70,9 +70,9 @@ class Attract : Scene
         particle_system.update(10);
 
         if (disp > 0)
-            disp -= 2;
+            disp -= 5;
         if (disp2 > 0)
-            disp2 -= 2;
+            disp2 -= 5;
 
     }
 

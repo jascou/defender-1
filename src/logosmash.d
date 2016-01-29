@@ -80,34 +80,45 @@ int init_smash(VertexArray dots, float dotsize, Image image, RenderWindow window
 
 void loaddata()
 {
+	int i=0,p=0;
 
-    string l = "";
+	data.length=4400000;
+    char[20] l = "                    ";
+    
     foreach (char s; bytes)
     {
         if (s == '\n')
         {
-            data ~= to!float(l);
-            l = "";
+            data[i]= to!float(l[0..p-1]);
+            l = "                    ";
+            i++;
+            p=0;
         }
         else
         {
             if (s != '\r')
-                l ~= s;
+            {
+                l[p]=s;
+            }
+            p++;
         }
     }
+ 
 }
 
 void run_logosmash(RenderWindow window, App app)
 {
 
-    // each dot's position will be controlled by the data in resources/logosmash
-    // load this up in the background so we don't have to wait for it 
-    loaddata();
+    auto view = window.getDefaultView().dup();
+    view.zoom(2);
+    window.view = view;
+   
 
     auto image = new Image();
     image.loadFromMemory(app.globals.get_resource("dsfml.bmp"));
     auto image_width = image.getSize().x;
     auto image_height = image.getSize().y;
+    
 
     auto dots = new VertexArray(PrimitiveType.Quads, ((image_width * image_height) + 1) * 4);
     auto clock = new Clock();
@@ -117,11 +128,11 @@ void run_logosmash(RenderWindow window, App app)
 
     window.setMouseCursorVisible(false);
     window.clear(Color.Black);
+     
     window.display();
-    auto view = window.getDefaultView().dup();
-    view.zoom(2);
-    window.view = view;
-
+    
+    loaddata();
+    
     win: while (window.isOpen())
     {
         Event event;
